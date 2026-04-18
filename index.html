@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Support Ticket System</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+
+        h1 { text-align: center; }
+
+        input, select {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 8px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background: #007bff;
+            color: white;
+        }
+
+        .high { background: #f8d7da; }
+        .medium { background: #fff3cd; }
+        .low { background: #d4edda; }
+    </style>
+</head>
+
+<body>
+
+<h1>Customer Support Ticket Dashboard</h1>
+
+<div>
+    <input type="text" id="issue" placeholder="Enter Issue">
+    
+    <select id="priority">
+        <option>High</option>
+        <option>Medium</option>
+        <option>Low</option>
+    </select>
+
+    <select id="category">
+        <option>Software</option>
+        <option>Hardware</option>
+        <option>Network</option>
+    </select>
+
+    <button onclick="addTicket()">Add Ticket</button>
+</div>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Issue</th>
+            <th>Priority</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Time</th>
+        </tr>
+    </thead>
+    <tbody id="table"></tbody>
+</table>
+
+<script>
+
+let tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+
+function save() {
+    localStorage.setItem("tickets", JSON.stringify(tickets));
+}
+
+function addTicket() {
+    let issue = document.getElementById("issue").value;
+    let priority = document.getElementById("priority").value;
+    let category = document.getElementById("category").value;
+
+    if(issue === "") return;
+
+    tickets.push({
+        issue,
+        priority,
+        category,
+        status: "Open",
+        time: new Date().toLocaleString()
+    });
+
+    save();
+    render();
+
+    // Clear input field after adding ticket
+    document.getElementById("issue").value = "";
+}
+
+function updateStatus(index, value) {
+    tickets[index].status = value;
+    save();
+    render();
+}
+
+function render() {
+    let table = document.getElementById("table");
+    table.innerHTML = "";
+
+    tickets.forEach((t, i) => {
+        let row = document.createElement("tr");
+
+        row.className = t.priority.toLowerCase();
+
+        row.innerHTML = `
+            <td>${t.issue}</td>
+            <td>${t.priority}</td>
+            <td>${t.category}</td>
+            <td>
+                <select onchange="updateStatus(${i}, this.value)">
+                    <option ${t.status=="Open"?"selected":""}>Open</option>
+                    <option ${t.status=="In Progress"?"selected":""}>In Progress</option>
+                    <option ${t.status=="Resolved"?"selected":""}>Resolved</option>
+                </select>
+            </td>
+            <td>${t.time}</td>
+        `;
+
+        table.appendChild(row);
+    });
+}
+
+render();
+
+</script>
+
+</body>
+</html>
