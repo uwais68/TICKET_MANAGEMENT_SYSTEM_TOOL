@@ -77,6 +77,7 @@
             <th>Category</th>
             <th>Status</th>
             <th>Time</th>
+            <th>SLA</th>
         </tr>
     </thead>
     <tbody id="table"></tbody>
@@ -98,12 +99,12 @@ function addTicket() {
     if(issue === "") return;
 
     tickets.push({
-        issue,
-        priority,
-        category,
-        status: "Open",
-        time: new Date().toLocaleString()
-    });
+    issue,
+    priority,
+    category,
+    status: "Open",
+    createdTime: new Date().getTime()
+});
 
     save();
     render();
@@ -118,13 +119,27 @@ function updateStatus(index, value) {
     render();
 }
 
+// FUNCTION FOR SLA STATUS
+function checkSLA(ticket) {
+    let now = new Date().getTime();
+    let diff = (now - ticket.createdTime) / 1000;
+
+    let limit = 0;
+
+    if (ticket.priority === "High") limit = 60;
+    else if (ticket.priority === "Medium") limit = 120;
+    else limit = 240;
+
+    return diff > limit;
+}
+
 function render() {
     let table = document.getElementById("table");
     table.innerHTML = "";
 
     tickets.forEach((t, i) => {
         let row = document.createElement("tr");
-
+        let slaStatus = checkSLA(t) ? "Breach 🚨" : "Within SLA";    
         row.className = t.priority.toLowerCase();
 
         row.innerHTML = `
@@ -138,8 +153,13 @@ function render() {
                     <option ${t.status=="Resolved"?"selected":""}>Resolved</option>
                 </select>
             </td>
-            <td>${t.time}</td>
+            <td>${new Date(t.createdTime || Date.parse(t.time)).toLocaleString()}</td>
+            <td>${slaStatus}</td>
         `;
+        
+        if (checkSLA(t)) {
+        row.style.backgroundColor = "#f8d7da";
+    }
 
         table.appendChild(row);
     });
